@@ -5,6 +5,7 @@ ExtractorTube allows for the extracting of a YouTube media's direct streaming UR
 ## Todo
 * Execute the signature decryption function
 * Decrypt signatures
+* Tests
 
 ## Examples
 ```objc
