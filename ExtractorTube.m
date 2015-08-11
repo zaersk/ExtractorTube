@@ -23,7 +23,7 @@ static ExtractorTube *_instance = nil;
 + (ExtractorTube *)sharedExtractor {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        _instance = [ExtractorTube new];
+        _instance = [self new];
     });
     
     return _instance;
@@ -82,9 +82,10 @@ static ExtractorTube *_instance = nil;
                 [_jsContext evaluateScript:script];
                 NSLog(@"%@",[[_jsContext exception] toString]);
                 */
+                // NSLog(@"%@",[[NSString alloc] initWithData:response encoding:NSUTF8StringEncoding]);
                 
-                [_jsContext evaluateScript:[[NSString alloc] initWithData:response encoding:NSUTF8StringEncoding]];
-                NSLog(@"%@",[[_jsContext exception] toString]);
+                // [_jsContext evaluateScript:[[NSString alloc] initWithData:response encoding:NSUTF8StringEncoding]];
+                // NSLog(@"%@",[[_jsContext exception] toString]);
                 
                 NSString *decryptionFuncName = [weakSelf extractDecryptionFuncName:response];
                 if (!decryptionFuncName) {
@@ -100,7 +101,7 @@ static ExtractorTube *_instance = nil;
                 NSLog(@"%@", decryptionFunc);
                 
                 [_jsContext evaluateScript:decryptionFunc];
-                NSLog(@"%@",[[_jsContext exception] toString]);
+                NSLog(@"decryptionFunc exp: %@",[[_jsContext exception] toString]);
                 
                 NSString *decryptionFuncProperty = [weakSelf validateDecryptionFunc:response withFunctionName:decryptionFuncName];
                 if (!decryptionFuncProperty) {
@@ -111,7 +112,7 @@ static ExtractorTube *_instance = nil;
                 [_jsContext evaluateScript:decryptionFuncProperty];
                 
                 NSLog(@"done!");
-                 
+                
                 
             } failure:^(NSString *error) {
                 NSLog(@"Error %@", error);
@@ -219,19 +220,28 @@ static ExtractorTube *_instance = nil;
     NSTextCheckingResult *result = [reg firstMatchInString:str
                                                    options:(NSMatchingOptions)0
                                                      range:NSMakeRange(0, str.length)];
-    NSString *funcStr = (result.numberOfRanges > 1) ? [str substringWithRange:[result rangeAtIndex:0]] : nil;
+    NSArray *results = [reg matchesInString:str options:(NSMatchingOptions)0 range:NSMakeRange(0, str.length)];
+    for (int i = 0; i < [results count]; i++) {
+        NSTextCheckingResult *result2 = results[i];
+        
+        NSString *funcStr = (result2.numberOfRanges > 1) ? [str substringWithRange:[result2 rangeAtIndex:0]] : nil;
+        // NSLog(@"RESULT: %@", funcStr);
+    }
+    // NSString *funcStr = (result.numberOfRanges > 1) ? [str substringWithRange:[result rangeAtIndex:0]] : nil;
+    NSTextCheckingResult *result2 = results[1];
+    NSString *funcStr = (result2.numberOfRanges > 1) ? [str substringWithRange:[result2 rangeAtIndex:0]] : nil;
     return funcStr;
 }
 
 - (id)validateDecryptionFunc:(NSData *)data withFunctionName:(NSString *)funcName {
     
-    [_jsContext evaluateScript:[[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]];
-    NSLog(@"%@",[[_jsContext exception] toString]);
+    // [_jsContext evaluateScript:[[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]];
+    // NSLog(@"VDF: %@",[[_jsContext exception] toString]);
     
     [_jsContext evaluateScript:[NSString stringWithFormat:@"%@('%@')", funcName, ytDummySignature]];
     
     NSString *exception = [[_jsContext exception] toString];
-    NSLog(@"%@",exception);
+    NSLog(@"VDF 2: %@",exception);
     
     NSString *funcName2 = [exception stringByReplacingOccurrencesOfString:@"ReferenceError: Can't find variable: " withString:@""];
     
